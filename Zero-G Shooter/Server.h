@@ -32,10 +32,11 @@ private:
 
 	std::thread* m_thread;
 
+	static void sendData(std::string, int id);
+	static int getPeerID(std::string, int port);
 	static tokens_t tokenize(std::string);
 	static void threadfunct();
 
-	static void sendData(std::string, int id);
 public:
 	Server();
 	~Server();

@@ -4,10 +4,13 @@
 #include <thread>
 #include <sstream>
 #include <string>
+#include <chrono>
 #include <SFML/Network.hpp>
 #include "Peer.h"
 
 #define BUFFERSIZE 128
+
+using namespace std::chrono;
 
 typedef std::vector<std::string> tokens_t;
 
