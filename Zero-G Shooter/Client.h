@@ -5,7 +5,9 @@
 #include <sstream>
 #include <string>
 #include <chrono>
+#include <stdarg.h>
 #include <SFML/Network.hpp>
+#include "Packet.h"
 #include "Peer.h"
 
 #define BUFFERSIZE 128
@@ -13,14 +15,15 @@
 using namespace std::chrono;
 
 typedef std::vector<std::string> tokens_t;
+typedef std::vector<sf::Packet> datastack_t;
 
 class Client
 {
 private:
 
-	static std::map<int, Peer> m_peers;
+	static std::map<int, Peer*> m_peers;
 
-	static tokens_t       m_datastack;
+	static datastack_t    m_datastack;
 	static std::string    m_ip;
 	static sf::UdpSocket* m_socket;
 	static int            m_localid;
@@ -37,9 +40,9 @@ public:
 	~Client();
 
 	void start(std::string, int);
-	void sendData(std::string);
+	void sendData(PACKET, ...);
 
-	std::map<int, Peer>& getPeers();
+	std::map<int, Peer*>& getPeers();
 	int getLocalID();
 
 };

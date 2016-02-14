@@ -14,4 +14,11 @@ struct Peer
 	std::string ip;
 	int port;
 	int id;
+
+	/// constructor
+	Peer(std::string ip, int port, int id) :
+		ip(ip),
+		port(port),
+		id(id)
+	{ }
 };

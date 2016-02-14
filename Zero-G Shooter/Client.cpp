@@ -1,8 +1,8 @@
 #include "Client.h"
 
-std::map<int, Peer> Client::m_peers;
+std::map<int, Peer*> Client::m_peers;
 
-tokens_t       Client::m_datastack;
+datastack_t    Client::m_datastack;
 std::string    Client::m_ip;
 sf::UdpSocket* Client::m_socket;
 int            Client::m_localid;
@@ -31,77 +31,29 @@ void Client::threadfunct()
 {
 	m_socket = new sf::UdpSocket();
 	m_socket->setBlocking(true);
-	m_socket->bind(sf::UdpSocket::AnyPort);
 
-	char buffer[BUFFERSIZE];
-	std::size_t data_size;
+	sf::Packet packet;
 	sf::IpAddress sender;
 	unsigned short port;
-
-	float t = 0.f;
-	float dt = 1.f / 30.f;
-
-	high_resolution_clock::time_point currentTime = high_resolution_clock::now();
-	high_resolution_clock::time_point newTime;
-	float accumulator = 0;
+	
+	int type;
 
 	while (m_running)
 	{
-		newTime = high_resolution_clock::now();
-		double frametime = duration_cast<duration<double>>(newTime - currentTime).count();
-		currentTime = newTime;
-		accumulator += frametime;
-
-		while (accumulator > dt)
+		/// flush packets from stack
+		for (int i = 0; i < m_datastack.size(); i++)
 		{
-			for (int i = 0; i < m_datastack.size(); i++)
-			{
-				std::string data = m_datastack[i];
-				m_datastack.erase(m_datastack.begin() + i);
-				m_socket->send(data.c_str(), data.length(), m_ip, m_port);
-			}
+			sf::Packet p = m_datastack.at(i);
+			std::cout << "[SEND] " << p.getData() << ":" << p.getDataSize() << std::endl;
+			m_socket->send(p, m_ip, m_port);
+			m_datastack.erase(m_datastack.begin()+i);
+		}
 
-			if (m_socket->receive(&buffer, BUFFERSIZE, data_size, sender, port) == sf::Socket::Done)
-			{
-				tokens_t tkns = tokenize(std::string(buffer));
-
-				if (tkns[0] == "localid" && tkns.size() > 1)
-				{
-					printf("[CLIENT] Got local ID %d\n", std::atoi(tkns[1].c_str()));
-					m_localid = std::atoi(tkns[1].c_str());
-				}
-
-				if (tkns[0] == "userconnect" && tkns.size() > 1)
-				{
-					printf("[CLIENT] Got user connect\n");
-					Peer _temp;
-					_temp.id = std::atoi(tkns[1].c_str());
-
-					if (_temp.id == 1)
-						_temp.ip = sender.getLocalAddress().toString();
-					else
-						_temp.ip = sender.getPublicAddress().toString();
-
-					_temp.port = port;
-					m_peers.emplace(_temp.id, _temp);
-				}
-
-				if (tkns[0] == "worldpacket")
-				{
-					Peer& _peer = m_peers.at(std::atoi(tkns[1].c_str()));
-
-					_peer.x = std::atoi(tkns[2].c_str());
-					_peer.y = std::atoi(tkns[3].c_str());
-					_peer.z = std::atoi(tkns[4].c_str());
-
-					_peer.x = std::atoi(tkns[5].c_str());
-					_peer.y = std::atoi(tkns[6].c_str());
-					_peer.z = std::atoi(tkns[7].c_str());
-				}
-			}
-
-			accumulator -= dt;
-			t += dt;
+		/// receive packet data
+		if (m_socket->receive(packet, sender, port) == sf::Socket::Done)
+		{
+			packet >> type;
+			std::cout << "[CLIENT] got packet of type " << type << std::endl;
 		}
 	}
 
@@ -112,17 +64,30 @@ void Client::start(std::string ip, int port)
 	m_ip = ip;
 	m_port = port;
 	m_running = true;
-	sendData("userconnect");
+	sendData(P_USERCONNECT, -1);
 	m_thread = new std::thread(&threadfunct);
 
 }
 
-void Client::sendData(std::string data)
+void Client::sendData(PACKET type, ...)
 {
-	m_datastack.push_back(data);
+	sf::Packet packet;
+
+	va_list vl;
+	va_start(vl, type);
+	
+	packet << type;
+	for (int i = 0; i < VARNUM.at(type); i++)
+		packet << vl[i];
+	
+	va_end(vl);
+
+	std::cout << "[PACKET] " << packet.getData() << ":" << packet.getDataSize() << std::endl;
+	m_datastack.push_back(packet);
+
 }
 
-std::map<int, Peer>& Client::getPeers()
+std::map<int, Peer*>& Client::getPeers()
 {
 	return m_peers;
 }

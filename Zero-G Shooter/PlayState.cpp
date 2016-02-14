@@ -30,7 +30,7 @@ void PlayState::init(IrrlichtDevice* device, IVideoDriver* driver, ISceneManager
 		gui->addStaticText(L"SERVER", rect<s32>(10, 30, 50, 42), true);
 		printf("[PLAY] start_server = true\n");
 		m_server = new Server();
-		m_server->start(27015);
+		m_server->start(m_port);
 	}
 	m_client = new Client();
 	m_client->start(m_ip, m_port);
@@ -48,9 +48,11 @@ void PlayState::update(float dt)
 {
 	for (auto &it : m_client->getPeers())
 	{
-		Peer peer = (Peer&)it.second;
+		Peer& peer = (Peer&)it.second;
 		
-		if (it.first == m_client->getLocalID())
+		printf("[STATE] mesh is done: %s %d    ", peer.has_mesh ? "true" : "false", peer.id);
+
+		if (peer.id == m_client->getLocalID())
 		{
 			printf("[STATE] user is local %d:%d\r", it.first, m_client->getLocalID());
 			continue;
@@ -73,21 +75,8 @@ void PlayState::update(float dt)
 			m_players.at(it.first)->setPosition(vector3df(peer.x, peer.y, peer.z));
 			m_players.at(it.first)->setRotation(vector3df(peer.rx, peer.ry, peer.rz));
 		}
-		printf("[STATE] mesh is done: %s\n", peer.has_mesh ? "true" : "false");
+		printf("[STATE] mesh is done: %s %d\n", peer.has_mesh ? "true" : "false", peer.id);
 	}
-
-	Peer& local_peer = m_client->getPeers()[m_client->getLocalID()];
-
-	std::stringstream world_packet;
-	world_packet << "worldpacket "
-		<< m_client->getLocalID() << " "
-		<< m_camera->getPosition().X << " "
-		<< m_camera->getPosition().Y << " "
-		<< m_camera->getPosition().Z << " "
-
-		<< m_camera->getRotation().X << " "
-		<< m_camera->getRotation().Y << " "
-		<< m_camera->getRotation().Z;
 
 	//m_client->sendData(world_packet.str());
 
