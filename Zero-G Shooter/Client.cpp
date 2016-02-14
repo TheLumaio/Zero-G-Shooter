@@ -1,8 +1,8 @@
 #include "Client.h"
 
-std::map<int, Peer> Client::m_peers;
+std::map<int, Peer*> Client::m_peers;
 
-tokens_t       Client::m_datastack;
+datastack_t    Client::m_datastack;
 std::string    Client::m_ip;
 sf::UdpSocket* Client::m_socket;
 int            Client::m_localid;
@@ -30,46 +30,30 @@ tokens_t Client::tokenize(std::string str)
 void Client::threadfunct()
 {
 	m_socket = new sf::UdpSocket();
-	m_socket->setBlocking(false);
-	m_socket->bind(sf::UdpSocket::AnyPort);
+	m_socket->setBlocking(true);
 
-	char buffer[BUFFERSIZE];
-	std::size_t data_size;
+	sf::Packet packet;
 	sf::IpAddress sender;
 	unsigned short port;
+	
+	int type;
 
 	while (m_running)
 	{
+		/// flush packets from stack
 		for (int i = 0; i < m_datastack.size(); i++)
 		{
-			std::string data = m_datastack[i];
-			m_datastack.erase(m_datastack.begin() + i);
-			m_socket->send(data.c_str(), data.length(), m_ip, m_port);
+			sf::Packet p = m_datastack.at(i);
+			std::cout << "[SEND] " << p.getData() << ":" << p.getDataSize() << std::endl;
+			m_socket->send(p, m_ip, m_port);
+			m_datastack.erase(m_datastack.begin()+i);
 		}
 
-		if (m_socket->receive(&buffer, BUFFERSIZE, data_size, sender, port) == sf::Socket::Done)
+		/// receive packet data
+		if (m_socket->receive(packet, sender, port) == sf::Socket::Done)
 		{
-			tokens_t tkns = tokenize(std::string(buffer));
-
-			if (tkns[0] == "localid" && tkns.size() > 1)
-			{
-				printf("[CLIENT] Got local ID %d\n", std::atoi(tkns[1].c_str()));
-				m_localid = std::atoi(tkns[1].c_str());
-			}
-			if (tkns[0] == "userconnect" && tkns.size() > 1)
-			{
-				printf("[CLIENT] Got user connect\n");
-				Peer _temp;
-				_temp.id = std::atoi(tkns[1].c_str());
-
-				if (_temp.id == 1)
-					_temp.ip = sender.getLocalAddress().toString();
-				else
-					_temp.ip = sender.getPublicAddress().toString();
-				
-				_temp.port = port;
-				m_peers.emplace(_temp.id, _temp);
-			}
+			packet >> type;
+			std::cout << "[CLIENT] got packet of type " << type << std::endl;
 		}
 	}
 
@@ -80,17 +64,30 @@ void Client::start(std::string ip, int port)
 	m_ip = ip;
 	m_port = port;
 	m_running = true;
-	sendData("userconnect");
+	sendData(P_USERCONNECT, -1);
 	m_thread = new std::thread(&threadfunct);
 
 }
 
-void Client::sendData(std::string data)
+void Client::sendData(PACKET type, ...)
 {
-	m_datastack.push_back(data);
+	sf::Packet packet;
+
+	va_list vl;
+	va_start(vl, type);
+	
+	packet << type;
+	for (int i = 0; i < VARNUM.at(type); i++)
+		packet << vl[i];
+	
+	va_end(vl);
+
+	std::cout << "[PACKET] " << packet.getData() << ":" << packet.getDataSize() << std::endl;
+	m_datastack.push_back(packet);
+
 }
 
-std::map<int, Peer>& Client::getPeers()
+std::map<int, Peer*>& Client::getPeers()
 {
 	return m_peers;
 }
