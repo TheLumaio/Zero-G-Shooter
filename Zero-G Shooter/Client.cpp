@@ -8,6 +8,7 @@ sf::UdpSocket* Client::m_socket;
 int            Client::m_localid;
 int            Client::m_port = 0;
 bool           Client::m_running = false;
+sf::Packet     Client::m_temppacket;
 
 Client::Client()
 {
@@ -59,6 +60,28 @@ void Client::threadfunct()
 
 }
 
+template<typename T>
+	void Client::TsendData(T t)
+{
+	m_packet << t;
+}
+
+template<typename Arg, typename ...Args>
+	void Client::RsendData(Arg arg, Args args)
+{
+	TsendData(T);
+	RsendData(args...);
+}
+void Client::RsendData() { }
+
+template<typename ...Args>
+	void Client::sendData(PACKET type, Args... args)
+{
+	m_temppacket.clear();
+	RsendData(args...);
+	m_datastack.emplace_back(m_temppacket);
+}
+
 void Client::start(std::string ip, int port)
 {
 	m_ip = ip;
@@ -66,24 +89,6 @@ void Client::start(std::string ip, int port)
 	m_running = true;
 	sendData(P_USERCONNECT, -1);
 	m_thread = new std::thread(&threadfunct);
-
-}
-
-void Client::sendData(PACKET type, ...)
-{
-	sf::Packet packet;
-
-	va_list vl;
-	va_start(vl, type);
-	
-	packet << type;
-	for (int i = 0; i < VARNUM.at(type); i++)
-		packet << vl[i];
-	
-	va_end(vl);
-
-	std::cout << "[PACKET] " << packet.getData() << ":" << packet.getDataSize() << std::endl;
-	m_datastack.push_back(packet);
 
 }
 
