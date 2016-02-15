@@ -31,13 +31,14 @@ tokens_t Client::tokenize(std::string str)
 void Client::threadfunct()
 {
 	m_socket = new sf::UdpSocket();
-	m_socket->setBlocking(true);
+	m_socket->setBlocking(false);
 
 	sf::Packet packet;
 	sf::IpAddress sender;
 	unsigned short port;
 	
 	int type;
+
 
 	while (m_running)
 	{
@@ -46,15 +47,26 @@ void Client::threadfunct()
 		{
 			sf::Packet p = m_datastack.at(i);
 			std::cout << "[SEND] " << p.getData() << ":" << p.getDataSize() << std::endl;
+
 			m_socket->send(p, m_ip, m_port);
-			m_datastack.erase(m_datastack.begin()+i);
+			m_datastack.erase(m_datastack.begin() + i);
 		}
 
 		/// receive packet data
 		if (m_socket->receive(packet, sender, port) == sf::Socket::Done)
 		{
 			packet >> type;
-			std::cout << "[CLIENT] got packet of type " << type << std::endl;
+			switch (type)
+			{
+			case P_LOCALID:
+				std::cout << "[CLIENT] localid" << std::endl;
+				break;
+			case P_USERCONNECT:
+				std::cout << "[CLIENT] userconnect" << std::endl;
+				break;
+			default:
+				break;
+			}
 		}
 	}
 
@@ -78,6 +90,7 @@ template<typename ...Args>
 	void Client::sendData(PACKET type, Args... args)
 {
 	m_temppacket.clear();
+	m_temppacket << type;
 	RsendData(args...);
 	m_datastack.emplace_back(m_temppacket);
 }

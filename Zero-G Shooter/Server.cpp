@@ -18,7 +18,6 @@ Server::~Server()
 template<typename T>
 	void Server::TsendData(T t)
 {
-	std::cout << t;
 	m_temppacket << t;
 }
 
@@ -39,7 +38,6 @@ template<typename ...Args>
 	m_temppacket.clear();
 
 	RsendData(args...);
-	std::cout << std::endl;
 
 	Data _temp;
 	_temp.id = id;
@@ -71,14 +69,19 @@ void Server::threadfunct()
 	
 	while (m_running)
 	{
-		/// flush packets from stack
-		for (int i = 0; i < m_datastack.size(); i++)
+		int i = 0;
+		while (m_datastack.size() > 0)
 		{
-			Peer* to_peer = m_peers.at(m_datastack.at(i).id);
+			auto& packet = m_datastack.at(0);
 
-			sf::Packet p = m_datastack.at(i).data;
+			printf("[S:PACKET] %d\n", i);
+			sf::Packet p = packet.data;
+			Peer* to_peer = m_peers.at(packet.id);
+
 			m_socket->send(p, to_peer->ip, to_peer->port);
-			m_datastack.erase(m_datastack.begin() + i);
+			m_datastack.erase(m_datastack.begin());
+
+			i++;
 		}
 
 		/// receive packet data
@@ -96,18 +99,12 @@ void Server::threadfunct()
 
 				for (auto& peer : m_peers)
 				{
-					if (peer.second->id == _id)
-					{
-						std::cout << "[SERVER] peer is local " << peer.second->id << std::endl;
-						sendData(P_USERCONNECT, peer.second->id, 1, 2, 3);
-					}
-					else
-						std::cout << "[SERVER] peer isn't local " << peer.second->id << std::endl;
+					sendData(P_USERCONNECT, peer.second->id, _id);
 				}
 
 			}
-
 		}
+
 	}
 
 }
