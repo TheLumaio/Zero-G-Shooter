@@ -31,7 +31,7 @@ tokens_t Client::tokenize(std::string str)
 void Client::threadfunct()
 {
 	m_socket = new sf::UdpSocket();
-	m_socket->setBlocking(false);
+	m_socket->setBlocking(true);
 
 	sf::Packet packet;
 	sf::IpAddress sender;

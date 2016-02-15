@@ -36,6 +36,7 @@ template<typename ...Args>
 {
 
 	m_temppacket.clear();
+	m_temppacket << type;
 
 	RsendData(args...);
 
