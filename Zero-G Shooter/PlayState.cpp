@@ -20,6 +20,7 @@ PlayState::~PlayState()
 
 void PlayState::init(IrrlichtDevice* device, IVideoDriver* driver, ISceneManager* scene, IGUIEnvironment* gui)
 {
+	device->getCursorControl()->setVisible(false);
 	m_scene = scene;
 
 	gui->addStaticText(L"CLIENT", rect<s32>(10, 10, 50, 22), true);
@@ -32,6 +33,7 @@ void PlayState::init(IrrlichtDevice* device, IVideoDriver* driver, ISceneManager
 		m_server = new Server();
 		m_server->start(m_port);
 	}
+	
 	m_client = new Client();
 	m_client->start(m_ip, m_port);
 
@@ -46,19 +48,15 @@ void PlayState::leave(IrrlichtDevice*, IVideoDriver*, ISceneManager*, IGUIEnviro
 
 void PlayState::update(float dt)
 {
-	for (auto &it : m_client->getPeers())
+	for (auto &peer : m_client->getPeers())
 	{
-		Peer& peer = (Peer&)it.second;
 		
-		printf("[STATE] mesh is done: %s %d    ", peer.has_mesh ? "true" : "false", peer.id);
-
-		if (peer.id == m_client->getLocalID())
+		if (peer.second->id == m_client->getLocalID())
 		{
-			printf("[STATE] user is local %d:%d\r", it.first, m_client->getLocalID());
 			continue;
 		}
 
-		if (!peer.has_mesh)
+		if (!peer.second->has_mesh)
 		{
 
 			IAnimatedMesh* mesh = m_scene->getMesh("player.dae");
@@ -66,19 +64,35 @@ void PlayState::update(float dt)
 			if (node)
 				node->setMaterialFlag(EMF_LIGHTING, false);
 
-			m_players.emplace(it.first, node);
+			m_players.emplace(peer.first, node);
 
-			peer.has_mesh = true;
+			peer.second->has_mesh = true;
 		}
 		else
 		{
-			m_players.at(it.first)->setPosition(vector3df(peer.x, peer.y, peer.z));
-			m_players.at(it.first)->setRotation(vector3df(peer.rx, peer.ry, peer.rz));
+			m_players.at(peer.first)->setPosition(vector3df(peer.second->x, peer.second->y, peer.second->z));
+			m_players.at(peer.first)->setRotation(vector3df(peer.second->rx, peer.second->ry, peer.second->rz));
+			continue;
 		}
-		printf("[STATE] mesh is done: %s %d\n", peer.has_mesh ? "true" : "false", peer.id);
+
+		printf("[STATE] mesh is done: %s %d\n", peer.second->has_mesh ? "true" : "false", peer.second->id);
 	}
 
-	//m_client->sendData(world_packet.str());
+	
+	if (m_client->getLocalID() > 0) {
+		m_client->sendData(P_WORLD,
+			m_client->getLocalID(),
+
+			m_camera->getPosition().X,
+			m_camera->getPosition().Y,
+			m_camera->getPosition().Z,
+
+			m_camera->getRotation().X,
+			m_camera->getRotation().Y,
+			m_camera->getRotation().Z);
+	}
+		
+		
 
 }
 

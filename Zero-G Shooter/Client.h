@@ -31,25 +31,40 @@ private:
 	static bool           m_running;
 
 	std::thread* m_thread;
+	std::thread* m_datathread;
 
 	static sf::Packet m_temppacket;
 
 	static tokens_t tokenize(std::string);
+	static void datafunct();
 	static void threadfunct();
 
 	template<typename T>
-	static void TsendData(T);
+	static void TsendData(T t)
+	{
+		m_temppacket << t;
+	}
 
 	template<typename Arg, typename ...Args>
-	static void RsendData(Arg, Args...);
-	static void RsendData();
+	static void RsendData(Arg arg, Args... args)
+	{
+		TsendData(arg);
+		RsendData(args...);
+	}
+	static void RsendData() { }
 
 public:
 	Client();
 	~Client();
 
 	template<typename ...Args>
-		void sendData(PACKET, Args...);
+	void sendData(PACKET type, Args... args)
+	{
+		m_temppacket.clear();
+		m_temppacket << type;
+		RsendData(args...);
+		m_datastack.emplace_back(m_temppacket);
+	}
 
 	void start(std::string, int);
 

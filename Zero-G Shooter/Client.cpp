@@ -5,7 +5,7 @@ std::map<int, Peer*> Client::m_peers;
 datastack_t    Client::m_datastack;
 std::string    Client::m_ip;
 sf::UdpSocket* Client::m_socket;
-int            Client::m_localid;
+int            Client::m_localid = -1;
 int            Client::m_port = 0;
 bool           Client::m_running = false;
 sf::Packet     Client::m_temppacket;
@@ -28,28 +28,33 @@ tokens_t Client::tokenize(std::string str)
 	return _temp;
 }
 
+void Client::datafunct()
+{
+	while (m_running)
+	{
+		
+	}
+}
+
 void Client::threadfunct()
 {
 	m_socket = new sf::UdpSocket();
-	m_socket->setBlocking(true);
+	m_socket->setBlocking(false);
 
 	sf::Packet packet;
 	sf::IpAddress sender;
 	unsigned short port;
 	
 	int type;
-
+	int id;
 
 	while (m_running)
 	{
-		/// flush packets from stack
-		for (int i = 0; i < m_datastack.size(); i++)
+		while (!m_datastack.empty())
 		{
-			sf::Packet p = m_datastack.at(i);
-			std::cout << "[SEND] " << p.getData() << ":" << p.getDataSize() << std::endl;
-
-			m_socket->send(p, m_ip, m_port);
-			m_datastack.erase(m_datastack.begin() + i);
+			auto& packet = m_datastack.at(0);
+			m_socket->send(packet, m_ip, m_port);
+			m_datastack.erase(m_datastack.begin());
 		}
 
 		/// receive packet data
@@ -59,40 +64,33 @@ void Client::threadfunct()
 			switch (type)
 			{
 			case P_LOCALID:
-				std::cout << "[CLIENT] localid" << std::endl;
+				packet >> m_localid;
+				std::cout << "[CLIENT] localid " << m_localid << std::endl;
 				break;
 			case P_USERCONNECT:
+				packet >> id;
+				m_peers.emplace(id, new Peer("", 0, id));
+
 				std::cout << "[CLIENT] userconnect" << std::endl;
 				break;
+
+			case P_WORLD:
+				float x, y, z, rx, ry, rz;
+				packet >> id >> x >> y >> z >> rx >> ry >> rz;
+				m_peers.at(id)->x = x;
+				m_peers.at(id)->y = y;
+				m_peers.at(id)->z = z;
+
+				m_peers.at(id)->rx = rx;
+				m_peers.at(id)->ry = ry;
+				m_peers.at(id)->rz = rz;
+
 			default:
 				break;
 			}
 		}
 	}
 
-}
-
-template<typename T>
-	void Client::TsendData(T t)
-{
-	m_temppacket << t;
-}
-
-template<typename Arg, typename ...Args>
-	void Client::RsendData(Arg arg, Args... args)
-{
-	TsendData(arg);
-	RsendData(args...);
-}
-void Client::RsendData() { }
-
-template<typename ...Args>
-	void Client::sendData(PACKET type, Args... args)
-{
-	m_temppacket.clear();
-	m_temppacket << type;
-	RsendData(args...);
-	m_datastack.emplace_back(m_temppacket);
 }
 
 void Client::start(std::string ip, int port)

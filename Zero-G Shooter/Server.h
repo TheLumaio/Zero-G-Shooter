@@ -40,7 +40,7 @@ private:
 	template<typename T>
 		static void TsendData(T);
 		
-	template <typename Arg, typename ...Args>
+	template<typename Arg, typename ...Args>
 		static void RsendData(Arg, Args...);
 		static void RsendData();
 

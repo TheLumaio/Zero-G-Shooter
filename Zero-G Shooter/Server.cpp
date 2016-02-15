@@ -27,9 +27,7 @@ template<typename Arg, typename ...Args>
 	TsendData(arg);
 	RsendData(args...);
 }
-
-void Server::RsendData()
-{}
+void Server::RsendData() { }
 
 template<typename ...Args>
 	void Server::sendData(PACKET type, int id, Args... args)
@@ -67,11 +65,13 @@ void Server::threadfunct()
 	unsigned short port;
 
 	int type;
+	int id;
+	int _id;
 	
 	while (m_running)
 	{
 		int i = 0;
-		while (m_datastack.size() > 0)
+		while (!m_datastack.empty())
 		{
 			auto& packet = m_datastack.at(0);
 
@@ -89,20 +89,38 @@ void Server::threadfunct()
 		if (m_socket->receive(packet, sender, port) == sf::Socket::Done)
 		{
 			packet >> type;
-			if (type == P_USERCONNECT)
+			switch (type)
 			{
+			case P_USERCONNECT:
 				std::cout << "[SERVER] user connected. " << sender.getLocalAddress().toString() << ":" << port << std::endl;
 				// create peer
-				int _id = m_peers.size() + 1;
+				_id = m_peers.size() + 1;
 				m_peers.emplace(_id, new Peer(sender.getLocalAddress().toString(), port, _id));
 
 				sendData(P_LOCALID, _id, _id);
 
+					/// tell everyone about new client
 				for (auto& peer : m_peers)
-				{
 					sendData(P_USERCONNECT, peer.second->id, _id);
-				}
+				/// tell new client about everyone
+				for (auto& peer : m_peers)
+					if (peer.second->id != _id)
+						sendData(P_USERCONNECT, _id, peer.second->id);
+				/// 0
+				break;
 
+			case P_WORLD:
+				float x, y, z, rx, ry, rz;
+				packet >> id >> x >> y >> z >> rx >> ry >> rz;
+
+				for (auto& peer : m_peers)
+					if (peer.second->id != id)
+						sendData(P_WORLD, peer.second->id, id, x, y, z, rx, ry, rz);
+
+				break;
+
+			default:
+				break;
 			}
 		}
 
