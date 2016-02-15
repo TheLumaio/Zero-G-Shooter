@@ -32,15 +32,26 @@ private:
 
 	std::thread* m_thread;
 
+	static sf::Packet m_temppacket;
+
 	static tokens_t tokenize(std::string);
 	static void threadfunct();
+
+	template<typename T>
+	static void TsendData(T);
+
+	template<typename Arg, typename ...Args>
+	static void RsendData(Arg, Args...);
+	static void RsendData();
 
 public:
 	Client();
 	~Client();
 
+	template<typename ...Args>
+		void sendData(PACKET, Args...);
+
 	void start(std::string, int);
-	void sendData(PACKET, ...);
 
 	std::map<int, Peer*>& getPeers();
 	int getLocalID();
