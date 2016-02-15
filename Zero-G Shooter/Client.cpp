@@ -63,13 +63,13 @@ void Client::threadfunct()
 template<typename T>
 	void Client::TsendData(T t)
 {
-	m_packet << t;
+	m_temppacket << t;
 }
 
 template<typename Arg, typename ...Args>
-	void Client::RsendData(Arg arg, Args args)
+	void Client::RsendData(Arg arg, Args... args)
 {
-	TsendData(T);
+	TsendData(arg);
 	RsendData(args...);
 }
 void Client::RsendData() { }
