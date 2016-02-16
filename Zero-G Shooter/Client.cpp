@@ -99,6 +99,8 @@ void Client::start(std::string ip, int port)
 	m_port = port;
 	m_running = true;
 	m_thread = new std::thread(&threadfunct);
+
+	std::this_thread::sleep_for(std::chrono::seconds(2));
 	sendData(P_USERCONNECT, -1);
 	//m_datathread = new std::thread(&datafunct);
 

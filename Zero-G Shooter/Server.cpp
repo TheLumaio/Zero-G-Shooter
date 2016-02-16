@@ -94,11 +94,12 @@ void Server::threadfunct()
 				std::cout << "[SERVER] user connected. " << sender.getLocalAddress().toString() << ":" << port << std::endl;
 				// create peer
 				_id = m_peers.size() + 1;
-				std::cout << sender.getLocalAddress().toInteger() << std::endl;
-				if (sender.getLocalAddress().getLocalAddress().toInteger() != 0)
+				std::cout << sender.toString() << std::endl;
+
+				if (_id == 1)
 					m_peers.emplace(_id, new Peer(sender.getLocalAddress().toString(), port, _id));
 				else
-					m_peers.emplace(_id, new Peer(sender.getPublicAddress().toString(), port, _id));
+					m_peers.emplace(_id, new Peer(sender.toString(), port, _id));
 
 				sendData(P_LOCALID, _id, _id);
 
