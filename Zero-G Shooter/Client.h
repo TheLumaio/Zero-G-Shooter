@@ -63,6 +63,7 @@ public:
 		m_temppacket.clear();
 		m_temppacket << type;
 		RsendData(args...);
+		m_socket->send(m_temppacket, m_ip, m_port);
 		m_datastack.emplace_back(m_temppacket);
 	}
 

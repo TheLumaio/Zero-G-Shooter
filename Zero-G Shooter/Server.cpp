@@ -75,7 +75,6 @@ void Server::threadfunct()
 		{
 			auto& packet = m_datastack.at(0);
 
-			printf("[S:PACKET] %d\n", i);
 			sf::Packet p = packet.data;
 			Peer* to_peer = m_peers.at(packet.id);
 
@@ -95,7 +94,11 @@ void Server::threadfunct()
 				std::cout << "[SERVER] user connected. " << sender.getLocalAddress().toString() << ":" << port << std::endl;
 				// create peer
 				_id = m_peers.size() + 1;
-				m_peers.emplace(_id, new Peer(sender.getLocalAddress().toString(), port, _id));
+				std::cout << sender.getLocalAddress().toInteger() << std::endl;
+				if (sender.getLocalAddress().getLocalAddress().toInteger() != 0)
+					m_peers.emplace(_id, new Peer(sender.getLocalAddress().toString(), port, _id));
+				else
+					m_peers.emplace(_id, new Peer(sender.getPublicAddress().toString(), port, _id));
 
 				sendData(P_LOCALID, _id, _id);
 

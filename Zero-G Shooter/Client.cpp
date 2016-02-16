@@ -32,14 +32,19 @@ void Client::datafunct()
 {
 	while (m_running)
 	{
-		
+		while (!m_datastack.empty())
+		{
+			auto& packet = m_datastack.at(0);
+			m_socket->send(packet, m_ip, m_port);
+			m_datastack.erase(m_datastack.begin());
+		}
 	}
 }
 
 void Client::threadfunct()
 {
 	m_socket = new sf::UdpSocket();
-	m_socket->setBlocking(false);
+	m_socket->setBlocking(true);
 
 	sf::Packet packet;
 	sf::IpAddress sender;
@@ -50,13 +55,7 @@ void Client::threadfunct()
 
 	while (m_running)
 	{
-		while (!m_datastack.empty())
-		{
-			auto& packet = m_datastack.at(0);
-			m_socket->send(packet, m_ip, m_port);
-			m_datastack.erase(m_datastack.begin());
-		}
-
+		
 		/// receive packet data
 		if (m_socket->receive(packet, sender, port) == sf::Socket::Done)
 		{
@@ -89,6 +88,7 @@ void Client::threadfunct()
 				break;
 			}
 		}
+
 	}
 
 }
@@ -98,8 +98,9 @@ void Client::start(std::string ip, int port)
 	m_ip = ip;
 	m_port = port;
 	m_running = true;
-	sendData(P_USERCONNECT, -1);
 	m_thread = new std::thread(&threadfunct);
+	sendData(P_USERCONNECT, -1);
+	//m_datathread = new std::thread(&datafunct);
 
 }
 

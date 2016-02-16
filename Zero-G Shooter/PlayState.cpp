@@ -37,7 +37,7 @@ void PlayState::init(IrrlichtDevice* device, IVideoDriver* driver, ISceneManager
 	m_client = new Client();
 	m_client->start(m_ip, m_port);
 
-	m_camera = scene->addCameraSceneNodeFPS();
+	m_camera = scene->addCameraSceneNodeFPS(0, 100.f, 0.1f);
 
 }
 
@@ -70,12 +70,12 @@ void PlayState::update(float dt)
 		}
 		else
 		{
-			m_players.at(peer.first)->setPosition(vector3df(peer.second->x, peer.second->y, peer.second->z));
-			m_players.at(peer.first)->setRotation(vector3df(peer.second->rx, peer.second->ry, peer.second->rz));
-			continue;
+			if (m_players.at(peer.first) != nullptr)
+			{
+				m_players.at(peer.first)->setPosition(vector3df(peer.second->x, peer.second->y, peer.second->z));
+				m_players.at(peer.first)->setRotation(vector3df(peer.second->rx, peer.second->ry, peer.second->rz));
+			}
 		}
-
-		printf("[STATE] mesh is done: %s %d\n", peer.second->has_mesh ? "true" : "false", peer.second->id);
 	}
 
 	

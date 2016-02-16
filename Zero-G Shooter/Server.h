@@ -7,6 +7,7 @@
 #include <chrono>
 #include <stdarg.h>
 #include <utility>
+#include <chrono>
 #include <SFML/Network.hpp>
 #include "Packet.h"
 #include "Peer.h"
@@ -48,6 +49,7 @@ private:
 		static void sendData(PACKET, int, Args...);
 
 	static tokens_t tokenize(std::string);
+
 	static void threadfunct();
 
 public:
