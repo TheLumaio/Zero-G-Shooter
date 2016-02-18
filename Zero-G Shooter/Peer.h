@@ -8,7 +8,7 @@ struct Peer
 	bool has_mesh = false;
 	float x, y, z;
 	float rx, ry, rz;
-	std::string name = "Test User";
+	std::string name;
 
 	// peer data
 	std::string ip;
@@ -16,10 +16,11 @@ struct Peer
 	int id;
 
 	/// constructor
-	Peer(std::string ip, int port, int id) :
+	Peer(std::string ip, int port, int id, std::string name="Wow User") :
 		ip(ip),
 		port(port),
 		id(id),
+		name(name),
 		x(0),
 		y(0),
 		z(0),

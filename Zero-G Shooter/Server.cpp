@@ -67,6 +67,7 @@ void Server::threadfunct()
 	int type;
 	int id;
 	int _id;
+	std::string _name;
 	
 	while (m_running)
 	{
@@ -89,24 +90,25 @@ void Server::threadfunct()
 			{
 			case P_USERCONNECT:
 				std::cout << "[SERVER] user connected. " << sender.getLocalAddress().toString() << ":" << port << std::endl;
+				packet >> _name;
 				// create peer
 				_id = m_peers.size() + 1;
-				std::cout << sender.toString() << std::endl;
+				std::cout << _name << ":" << sender.toString() << std::endl;
 
 				if (_id == 1)
-					m_peers.emplace(_id, new Peer(sender.getLocalAddress().toString(), port, _id));
+					m_peers.emplace(_id, new Peer(sender.getLocalAddress().toString(), port, _id, _name));
 				else
-					m_peers.emplace(_id, new Peer(sender.toString(), port, _id));
+					m_peers.emplace(_id, new Peer(sender.toString(), port, _id, _name));
 
 				sendData(P_LOCALID, _id, _id);
 
 					/// tell everyone about new client
 				for (auto& peer : m_peers)
-					sendData(P_USERCONNECT, peer.second->id, _id);
+					sendData(P_USERCONNECT, peer.second->id, _id, _name);
 				/// tell new client about everyone
 				for (auto& peer : m_peers)
 					if (peer.second->id != _id)
-						sendData(P_USERCONNECT, _id, peer.second->id);
+						sendData(P_USERCONNECT, _id, peer.second->id, peer.second->name);
 				/// 0
 				break;
 

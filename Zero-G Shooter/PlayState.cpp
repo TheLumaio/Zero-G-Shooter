@@ -4,12 +4,14 @@ PlayState::PlayState()
 {
 }
 
-PlayState::PlayState(Engine* e, const wchar_t* ip, const wchar_t* port, bool start_server) :
+PlayState::PlayState(Engine* e, const wchar_t* ip, const wchar_t* port, const wchar_t* name, bool start_server) :
 	GameState(e)
 {
 	wstring w_ip(ip);
 	wstring w_port(port);
+	wstring w_name(name);
 	m_ip = std::string(w_ip.begin(), w_ip.end());
+	m_name = std::string(w_name.begin(), w_name.end());
 	m_port = atoi(std::string(w_port.begin(), w_port.end()).c_str());
 	m_start_server = start_server;
 
@@ -37,13 +39,12 @@ void PlayState::init(IrrlichtDevice* device, IVideoDriver* driver, ISceneManager
 	}
 	
 	m_client = new Client();
-	m_client->start(m_ip, m_port);
+	m_client->start(m_ip, m_name, m_port);
 
 	m_camera = scene->addCameraSceneNodeFPS(0, 100.f, 0.1f);
 
-	//scene->addLightSceneNode(0, vector3df(0, 0, 0), SColorf(1.f, 1.f, 1.f, 1.f), 100.f);
-
 	m_loader->loadMap("data/maps/testmap.json", scene);
+	m_font = gui->getBuiltInFont();
 
 }
 
@@ -74,7 +75,12 @@ void PlayState::update(float dt)
 				node->setScale(vector3df(-1, 1, -1));
 			}
 
-			m_players.emplace(peer.first, node);
+			wstring widestring = wstring(peer.second->name.begin(), peer.second->name.end());
+
+			IBillboardTextSceneNode* nametag;
+			nametag = m_scene->addBillboardTextSceneNode(m_font, widestring.c_str(), node, dimension2d<f32>(2, 1), vector3df(0, 1, 0));
+
+			m_players.emplace(peer.first, new Player(nametag, node));
 
 			peer.second->has_mesh = true;
 		}
@@ -82,8 +88,9 @@ void PlayState::update(float dt)
 		{
 			if (m_players.at(peer.first) != nullptr)
 			{
-				m_players.at(peer.first)->setPosition(vector3df(peer.second->x, peer.second->y, peer.second->z));
-				m_players.at(peer.first)->setRotation(vector3df(peer.second->rx, peer.second->ry, peer.second->rz));
+				m_players.at(peer.first)->node->setPosition(vector3df(peer.second->x, peer.second->y, peer.second->z));
+				m_players.at(peer.first)->node->setRotation(vector3df(peer.second->rx, peer.second->ry, peer.second->rz));
+				//m_players.at(peer.first)->nametag->setPosition(vector3df(peer.second->x, peer.second->y + 5, peer.second->z));
 			}
 		}
 	}

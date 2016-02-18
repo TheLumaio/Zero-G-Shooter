@@ -14,11 +14,12 @@ enum
 {
 	GUI_ID_SERVER_IP = 101,
 	GUI_ID_SERVER_PORT,
+	GUI_ID_NAME,
 	GUI_ID_SERVER_CONNECT,
 	GUI_ID_SERVER_HOST
 };
 
-void enterPlayState(Engine*, const wchar_t*, const wchar_t*, bool);
+void enterPlayState(Engine*, const wchar_t*, const wchar_t*, const wchar_t*, bool);
 
 class GuiReceiver : public IEventReceiver
 {
@@ -42,7 +43,13 @@ public:
 				auto y = rand() % 650;
 				printf("%d:%d\n", x, y);
 
-				enterPlayState(m_engine, root->getElementFromId(GUI_ID_SERVER_IP)->getText(), root->getElementFromId(GUI_ID_SERVER_PORT)->getText(), ((IGUICheckBox*)root->getElementFromId(GUI_ID_SERVER_HOST))->isChecked());
+				enterPlayState(m_engine,
+					root->getElementFromId(GUI_ID_SERVER_IP)->getText(),
+					root->getElementFromId(GUI_ID_SERVER_PORT)->getText(),
+					root->getElementFromId(GUI_ID_NAME)->getText(),
+					((IGUICheckBox*)root->getElementFromId(GUI_ID_SERVER_HOST))->isChecked()
+					);
+
 			}
 		}
 
@@ -56,6 +63,7 @@ private:
 
 	IGUIEditBox* g_ip;
 	IGUIEditBox* g_port;
+	IGUIEditBox* g_name;
 	IGUIButton* g_conn;
 	IGUICheckBox* g_host;
 

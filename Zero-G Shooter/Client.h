@@ -24,6 +24,7 @@ private:
 	static std::map<int, Peer*> m_peers;
 
 	static std::string    m_ip;
+	static std::string	    m_name;
 	static sf::UdpSocket* m_socket;
 	static int            m_localid;
 	static int            m_port;
@@ -64,7 +65,7 @@ public:
 		m_socket->send(m_temppacket, m_ip, m_port);
 	}
 
-	void start(std::string, int);
+	void start(std::string, std::string, int);
 
 	std::map<int, Peer*>& getPeers();
 	int getLocalID();

@@ -3,6 +3,7 @@
 std::map<int, Peer*> Client::m_peers;
 
 std::string    Client::m_ip;
+std::string    Client::m_name;
 sf::UdpSocket* Client::m_socket;
 int            Client::m_localid = -1;
 int            Client::m_port = 0;
@@ -39,11 +40,12 @@ void Client::threadfunct()
 	
 	int type;
 	int id;
+	std::string _name;
 
 	while (m_running)
 	{
 		if (!m_registered)
-			sendData(P_USERCONNECT);
+			sendData(P_USERCONNECT, m_name);
 
 		/// receive packet data
 		if (m_socket->receive(packet, sender, port) == sf::Socket::Done)
@@ -57,10 +59,10 @@ void Client::threadfunct()
 				m_registered = true;
 				break;
 			case P_USERCONNECT:
-				packet >> id;
-				m_peers.emplace(id, new Peer("", 0, id));
+				packet >> id >> _name;
+				m_peers.emplace(id, new Peer("", 0, id, _name));
 
-				std::cout << "[CLIENT] userconnect" << std::endl;
+				std::cout << "[CLIENT] userconnect " << _name << std::endl;
 				break;
 
 			case P_WORLD:
@@ -83,9 +85,10 @@ void Client::threadfunct()
 
 }
 
-void Client::start(std::string ip, int port)
+void Client::start(std::string ip, std::string name, int port)
 {
 	m_ip = ip;
+	m_name = name;
 	m_port = port;
 	m_running = true;
 	m_thread = new std::thread(&threadfunct);
