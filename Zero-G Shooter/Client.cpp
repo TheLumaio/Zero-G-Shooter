@@ -2,12 +2,12 @@
 
 std::map<int, Peer*> Client::m_peers;
 
-datastack_t    Client::m_datastack;
 std::string    Client::m_ip;
 sf::UdpSocket* Client::m_socket;
 int            Client::m_localid = -1;
 int            Client::m_port = 0;
 bool           Client::m_running = false;
+bool           Client::m_registered = false;
 sf::Packet     Client::m_temppacket;
 
 Client::Client()
@@ -28,19 +28,6 @@ tokens_t Client::tokenize(std::string str)
 	return _temp;
 }
 
-void Client::datafunct()
-{
-	while (m_running)
-	{
-		while (!m_datastack.empty())
-		{
-			auto& packet = m_datastack.at(0);
-			m_socket->send(packet, m_ip, m_port);
-			m_datastack.erase(m_datastack.begin());
-		}
-	}
-}
-
 void Client::threadfunct()
 {
 	m_socket = new sf::UdpSocket();
@@ -55,7 +42,9 @@ void Client::threadfunct()
 
 	while (m_running)
 	{
-		
+		if (!m_registered)
+			sendData(P_USERCONNECT);
+
 		/// receive packet data
 		if (m_socket->receive(packet, sender, port) == sf::Socket::Done)
 		{
@@ -65,6 +54,7 @@ void Client::threadfunct()
 			case P_LOCALID:
 				packet >> m_localid;
 				std::cout << "[CLIENT] localid " << m_localid << std::endl;
+				m_registered = true;
 				break;
 			case P_USERCONNECT:
 				packet >> id;
@@ -99,10 +89,6 @@ void Client::start(std::string ip, int port)
 	m_port = port;
 	m_running = true;
 	m_thread = new std::thread(&threadfunct);
-
-	std::this_thread::sleep_for(std::chrono::seconds(2));
-	sendData(P_USERCONNECT, -1);
-	//m_datathread = new std::thread(&datafunct);
 
 }
 

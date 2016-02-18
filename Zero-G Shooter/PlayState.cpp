@@ -12,6 +12,8 @@ PlayState::PlayState(Engine* e, const wchar_t* ip, const wchar_t* port, bool sta
 	m_ip = std::string(w_ip.begin(), w_ip.end());
 	m_port = atoi(std::string(w_port.begin(), w_port.end()).c_str());
 	m_start_server = start_server;
+
+	m_loader = new MapLoader{};
 }
 
 PlayState::~PlayState()
@@ -39,6 +41,10 @@ void PlayState::init(IrrlichtDevice* device, IVideoDriver* driver, ISceneManager
 
 	m_camera = scene->addCameraSceneNodeFPS(0, 100.f, 0.1f);
 
+	//scene->addLightSceneNode(0, vector3df(0, 0, 0), SColorf(1.f, 1.f, 1.f, 1.f), 100.f);
+
+	m_loader->loadMap("data/maps/testmap.json", scene);
+
 }
 
 void PlayState::leave(IrrlichtDevice*, IVideoDriver*, ISceneManager*, IGUIEnvironment*)
@@ -59,10 +65,13 @@ void PlayState::update(float dt)
 		if (!peer.second->has_mesh)
 		{
 
-			IAnimatedMesh* mesh = m_scene->getMesh("player.dae");
-			ISceneNode* node = m_scene->addAnimatedMeshSceneNode(mesh);
+			IAnimatedMesh* mesh = m_scene->getMesh("data/objects/player.dae");
+			IAnimatedMeshSceneNode* node = m_scene->addAnimatedMeshSceneNode(mesh);
 			if (node)
-				node->setMaterialFlag(EMF_LIGHTING, false);
+			{
+				node->setMaterialFlag(EMF_LIGHTING, true);
+				node->addShadowVolumeSceneNode();
+			}
 
 			m_players.emplace(peer.first, node);
 
@@ -73,7 +82,7 @@ void PlayState::update(float dt)
 			if (m_players.at(peer.first) != nullptr)
 			{
 				m_players.at(peer.first)->setPosition(vector3df(peer.second->x, peer.second->y, peer.second->z));
-				m_players.at(peer.first)->setRotation(vector3df(peer.second->rx, peer.second->ry, peer.second->rz));
+				m_players.at(peer.first)->setRotation(vector3df(peer.second->rx, peer.second->ry-180, peer.second->rz));
 			}
 		}
 	}

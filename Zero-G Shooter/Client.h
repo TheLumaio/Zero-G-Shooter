@@ -23,20 +23,18 @@ private:
 
 	static std::map<int, Peer*> m_peers;
 
-	static datastack_t    m_datastack;
 	static std::string    m_ip;
 	static sf::UdpSocket* m_socket;
 	static int            m_localid;
 	static int            m_port;
 	static bool           m_running;
+	static bool           m_registered;
 
 	std::thread* m_thread;
-	std::thread* m_datathread;
 
 	static sf::Packet m_temppacket;
 
 	static tokens_t tokenize(std::string);
-	static void datafunct();
 	static void threadfunct();
 
 	template<typename T>
@@ -58,13 +56,12 @@ public:
 	~Client();
 
 	template<typename ...Args>
-	void sendData(PACKET type, Args... args)
+	static void sendData(PACKET type, Args... args)
 	{
 		m_temppacket.clear();
 		m_temppacket << type;
 		RsendData(args...);
 		m_socket->send(m_temppacket, m_ip, m_port);
-		m_datastack.emplace_back(m_temppacket);
 	}
 
 	void start(std::string, int);

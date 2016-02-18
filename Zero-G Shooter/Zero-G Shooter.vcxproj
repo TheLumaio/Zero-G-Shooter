@@ -152,6 +152,7 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MapLoader.cpp" />
     <ClCompile Include="MenuState.cpp" />
     <ClCompile Include="PlayState.cpp" />
     <ClCompile Include="Server.cpp" />
@@ -160,6 +161,7 @@
     <ClInclude Include="Client.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="GameState.h" />
+    <ClInclude Include="MapLoader.h" />
     <ClInclude Include="MenuState.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="Peer.h" />

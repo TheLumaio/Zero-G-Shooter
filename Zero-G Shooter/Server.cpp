@@ -70,7 +70,6 @@ void Server::threadfunct()
 	
 	while (m_running)
 	{
-		int i = 0;
 		while (!m_datastack.empty())
 		{
 			auto& packet = m_datastack.at(0);
@@ -80,8 +79,6 @@ void Server::threadfunct()
 
 			m_socket->send(p, to_peer->ip, to_peer->port);
 			m_datastack.erase(m_datastack.begin());
-
-			i++;
 		}
 
 		/// receive packet data

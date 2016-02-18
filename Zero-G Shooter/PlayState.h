@@ -4,6 +4,7 @@
 #include "GameState.h"
 #include "Server.h"
 #include "Client.h"
+#include "MapLoader.h"
 
 class PlayState : public GameState
 {
@@ -14,6 +15,8 @@ private:
 
 	Server* m_server;
 	Client* m_client;
+
+	MapLoader* m_loader;
 
 	float timer;
 
