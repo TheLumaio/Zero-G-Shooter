@@ -71,6 +71,7 @@ void PlayState::update(float dt)
 			{
 				node->setMaterialFlag(EMF_LIGHTING, true);
 				node->addShadowVolumeSceneNode();
+				node->setScale(vector3df(-1, 1, -1));
 			}
 
 			m_players.emplace(peer.first, node);
@@ -82,7 +83,7 @@ void PlayState::update(float dt)
 			if (m_players.at(peer.first) != nullptr)
 			{
 				m_players.at(peer.first)->setPosition(vector3df(peer.second->x, peer.second->y, peer.second->z));
-				m_players.at(peer.first)->setRotation(vector3df(peer.second->rx, peer.second->ry-180, peer.second->rz));
+				m_players.at(peer.first)->setRotation(vector3df(peer.second->rx, peer.second->ry, peer.second->rz));
 			}
 		}
 	}
